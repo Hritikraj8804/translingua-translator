@@ -10,7 +10,12 @@ load_dotenv()
 # Configure the Gemini API
 def configure_gemini():
     """Configure the Gemini API with the API key"""
-    api_key = os.getenv("GOOGLE_API_KEY") or "YOUR_API_KEY_HERE"
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        st.error("🔑 GOOGLE_API_KEY NOT FOUND!")
+        st.info("Please create a `.env` file in the root directory and add: `GOOGLE_API_KEY=your_key_here`")
+        st.markdown("[Get a Gemini API Key here](https://aistudio.google.com/app/apikey)")
+        st.stop()
     genai.configure(api_key=api_key)
 
 # Auto-detect language function
