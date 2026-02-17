@@ -1,13 +1,32 @@
+# Environment variables (API keys)
 .env
+*/.env
+**/.env
+
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
+
+# Virtual environments
 env/
 venv/
 .venv/
+
+# Logs
 pip-log.txt
 pip-delete-this-directory.txt
-.DS_Store
 *.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+temp_*.txt
+
+# IDE
+.vscode/
+.idea/
