@@ -30,3 +30,14 @@ temp_*.txt
 # IDE
 .vscode/
 .idea/
+
+# Databases & Cache
+*.db
+*.sqlite3
+
+# ML Models & Large Files
+*.safetensors
+*.bin
+*.h5
+*.ckpt
+models/

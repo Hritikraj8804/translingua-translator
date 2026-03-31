@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translingua AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="circles">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+    </div>
+    
+    <main class="glass-container">
+        <header>
+            <div class="title-container">
+                <i data-lucide="languages" class="logo-icon"></i>
+                <h1>Translingua AI</h1>
+            </div>
+            <p>Offline-First Multilingual Translation</p>
+        </header>
+
+        <div class="translation-grid">
+            <div class="panel">
+                <div class="controls">
+                    <select id="sourceLang">
+                        <option value="en" selected>English</option>
+                        <option value="hi">Hindi</option>
+                        <option value="te">Telugu</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                    </select>
+                </div>
+                <textarea id="sourceText" placeholder="Enter text to translate..."></textarea>
+            </div>
+
+            <div class="center-controls">
+                <button id="swapBtn" class="icon-btn" title="Swap Languages">
+                    <i data-lucide="arrow-right-left"></i>
+                </button>
+            </div>
+
+            <div class="panel">
+                <div class="controls">
+                    <select id="targetLang">
+                        <option value="hi" selected>Hindi</option>
+                        <option value="en">English</option>
+                        <option value="te">Telugu</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                    </select>
+                </div>
+                <div class="output-container">
+                    <textarea id="targetText" readonly placeholder="Translation will appear here..."></textarea>
+                    <div id="loading" class="loading-overlay hidden">
+                        <i data-lucide="loader-2" class="spin"></i> <span>Processing (Offline)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="translateBtn" class="primary-btn">
+                <i data-lucide="sparkles"></i> Translate Now
+            </button>
+            <div id="cacheBadge" class="cache-badge hidden">
+                <i data-lucide="database-zap"></i> Faster response from local cache
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
