@@ -4,48 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Translingua AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <div class="circles">
-        <div class="circle circle-1"></div>
-        <div class="circle circle-2"></div>
-    </div>
-    
-    <main class="glass-container">
-        <header>
-            <div class="title-container">
-                <i data-lucide="languages" class="logo-icon"></i>
-                <h1>Translingua AI</h1>
+    <div class="app-container">
+        <!-- Sidebar for History -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="newChatBtn" class="new-chat-btn">
+                    <i data-lucide="plus"></i> New Translation
+                </button>
             </div>
-            <p>Offline-First Multilingual Translation</p>
-        </header>
+            <div class="history-container">
+                <p class="history-title">Recent Translations</p>
+                <div id="sidebarHistoryList" class="history-list">
+                    <div id="historyLoading" class="history-loading">
+                        <i data-lucide="loader-2" class="spin"></i> Loading...
+                    </div>
+                    <!-- History items will be injected here -->
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar"><i data-lucide="user"></i></div>
+                    <span class="user-name">Offline User</span>
+                </div>
+            </div>
+        </aside>
 
-        <div class="translation-grid">
-            <div class="panel">
-                <div class="controls">
-                    <select id="sourceLang">
+        <!-- Main Chat Area -->
+        <main class="main-content">
+            <!-- Top Navigation (Language Selection) -->
+            <header class="chat-header">
+                <div class="lang-selector-container">
+                    <select id="sourceLang" class="lang-select">
                         <option value="en" selected>English</option>
                         <option value="hi">Hindi</option>
                         <option value="te">Telugu</option>
                         <option value="ja">Japanese</option>
                         <option value="ko">Korean</option>
                     </select>
-                </div>
-                <textarea id="sourceText" placeholder="Enter text to translate..."></textarea>
-            </div>
-
-            <div class="center-controls">
-                <button id="swapBtn" class="icon-btn" title="Swap Languages">
-                    <i data-lucide="arrow-right-left"></i>
-                </button>
-            </div>
-
-            <div class="panel">
-                <div class="controls">
-                    <select id="targetLang">
+                    <button id="swapBtn" class="swap-btn" title="Swap Languages">
+                        <i data-lucide="arrow-right-left"></i>
+                    </button>
+                    <select id="targetLang" class="lang-select">
                         <option value="hi" selected>Hindi</option>
                         <option value="en">English</option>
                         <option value="te">Telugu</option>
@@ -53,24 +58,33 @@
                         <option value="ko">Korean</option>
                     </select>
                 </div>
-                <div class="output-container">
-                    <textarea id="targetText" readonly placeholder="Translation will appear here..."></textarea>
-                    <div id="loading" class="loading-overlay hidden">
-                        <i data-lucide="loader-2" class="spin"></i> <span>Processing (Offline)</span>
+            </header>
+
+            <!-- Chat Messages Container -->
+            <div id="chatBox" class="chat-box">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon-container">
+                        <i data-lucide="languages" class="logo-icon-large"></i>
                     </div>
+                    <h1>How can I translate for you today?</h1>
+                </div>
+                <!-- Messages will be injected here -->
+            </div>
+
+            <!-- Bottom Input Area -->
+            <div class="input-area-container">
+                <div class="input-box-wrapper">
+                    <textarea id="chatInput" placeholder="Enter text to translate..." rows="1"></textarea>
+                    <button id="sendBtn" class="send-btn" disabled>
+                        <i data-lucide="send"></i>
+                    </button>
+                </div>
+                <div class="disclaimer">
+                    Translingua AI powered by Meta's NLLB Model (Offline)
                 </div>
             </div>
-        </div>
-
-        <div class="actions">
-            <button id="translateBtn" class="primary-btn">
-                <i data-lucide="sparkles"></i> Translate Now
-            </button>
-            <div id="cacheBadge" class="cache-badge hidden">
-                <i data-lucide="database-zap"></i> Faster response from local cache
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="app.js"></script>
 </body>
