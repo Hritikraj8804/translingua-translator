@@ -18,6 +18,12 @@ const newChatBtn = document.getElementById('newChatBtn');
 
 const API_URL = 'http://localhost:8000';
 
+let currentSessionId = generateSessionId();
+
+function generateSessionId() {
+    return 'session_' + Math.random().toString(36).substr(2, 9);
+}
+
 // Auto-resize textarea
 chatInput.addEventListener('input', function() {
     this.style.height = 'auto';
@@ -52,6 +58,7 @@ swapBtn.addEventListener('click', () => {
 
 // New Chat Button
 newChatBtn.addEventListener('click', () => {
+    currentSessionId = generateSessionId();
     // Clear chat box except empty state
     chatBox.innerHTML = '';
     chatBox.appendChild(emptyState);
@@ -90,7 +97,8 @@ async function sendTranslationRequest() {
             body: JSON.stringify({
                 text: text,
                 source_lang: sourceLang,
-                target_lang: targetLang
+                target_lang: targetLang,
+                session_id: currentSessionId
             })
         });
 
@@ -194,7 +202,7 @@ function smoothScrollToBottom() {
 
 async function loadHistory() {
     try {
-        const response = await fetch(`${API_URL}/history`);
+        const response = await fetch(`${API_URL}/sessions`);
         if (!response.ok) throw new Error('Failed to fetch history');
         
         const data = await response.json();
@@ -217,17 +225,9 @@ async function loadHistory() {
                 </div>
             `;
             
-            // Optionally, we could make it so clicking a history item loads it into the chat
+            // Load full session on click
             div.addEventListener('click', () => {
-                sourceLangSelect.value = item.source_lang;
-                targetLangSelect.value = item.target_lang;
-                
-                chatBox.innerHTML = '';
-                emptyState.classList.add('hidden');
-                
-                // Show as chat pair
-                appendMessage('user', item.input_text, item.source_lang);
-                appendMessage('ai', item.translated_text, item.target_lang, true);
+                loadSessionDetails(item.session_id);
             });
 
             sidebarHistoryList.appendChild(div);
@@ -236,6 +236,33 @@ async function loadHistory() {
     } catch (e) {
         console.error('History Fetch Error:', e);
         sidebarHistoryList.innerHTML = '<p style="color:#ff6b6b; font-size: 0.85rem; padding: 10px;">Backend unavailable.</p>';
+    }
+}
+
+async function loadSessionDetails(sessionId) {
+    try {
+        const response = await fetch(`${API_URL}/session/${sessionId}`);
+        if (!response.ok) throw new Error('Failed to fetch session details');
+        
+        const messages = await response.json();
+        currentSessionId = sessionId; // switch to this session
+        
+        chatBox.innerHTML = '';
+        emptyState.classList.add('hidden');
+        
+        // Show first message's language as selected
+        if(messages.length > 0) {
+            sourceLangSelect.value = messages[0].source_lang;
+            targetLangSelect.value = messages[0].target_lang;
+        }
+
+        messages.forEach(msg => {
+            appendMessage('user', msg.input_text, msg.source_lang);
+            appendMessage('ai', msg.translated_text, msg.target_lang, false);
+        });
+        
+    } catch (e) {
+        console.error('Session Details Fetch Error:', e);
     }
 }
 

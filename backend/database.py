@@ -13,6 +13,7 @@ class TranslationCache(Base):
     __tablename__ = "translation_cache"
 
     id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(50), index=True, nullable=True)
     source_lang = Column(String(10), index=True)
     target_lang = Column(String(10), index=True)
     input_text = Column(Text, index=True)
