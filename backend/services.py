@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 import logging
+import langdetect
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,8 +19,25 @@ NLLB_LANG_MAP = {
     "hi": "hin_Deva",
     "te": "tel_Telu",
     "ja": "jpn_Jpan",
-    "ko": "kor_Hang"
+    "ko": "kor_Hang",
+    "fr": "fra_Latn",
+    "es": "spa_Latn",
+    "de": "deu_Latn",
+    "it": "ita_Latn"
 }
+
+def detect_language(text: str) -> str:
+    """Returns a 2-letter ISO code matching the NLLB_LANG_MAP keys"""
+    if not text.strip():
+        return "en"
+    try:
+        lang = langdetect.detect(text)
+        # Verify it's in our strictly supported list
+        if lang in NLLB_LANG_MAP:
+            return lang
+        return "en" # Fallback mapped default
+    except:
+        return "en"
 
 def load_model():
     global _nlp_model, _nlp_tokenizer
