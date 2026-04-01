@@ -438,6 +438,27 @@ body {
     color: var(--text-muted);
 }
 
+.upload-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.upload-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .send-btn {
     background: var(--accent);
     color: white;
