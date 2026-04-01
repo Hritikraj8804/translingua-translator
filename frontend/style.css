@@ -639,3 +639,46 @@ body {
         padding: 15px;
     }
 }
+
+/* Message Actions (Copy, TTS, Share) */
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.ai-message:hover .message-actions {
+    opacity: 1; /* Show on hover like ChatGPT */
+}
+
+/* Show permanently on mobile screens */
+@media (max-width: 768px) {
+    .message-actions {
+        opacity: 1;
+    }
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}

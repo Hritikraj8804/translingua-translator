@@ -213,6 +213,23 @@ function appendMessage(role, text, langCode, cached = false, overrideSourceLang 
     
     let cachedBadgeHTML = cached ? `<span style="background: rgba(46, 160, 67, 0.2); color: #2ea043; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; margin-left: 8px;">Cached⚡</span>` : '';
 
+    let actionButtons = '';
+    if (role === 'ai') {
+        actionButtons = `
+            <div class="message-actions">
+                <button class="action-btn" title="Copy Text" onclick="copyToClipboard(this)">
+                    <i data-lucide="copy"></i>
+                </button>
+                <button class="action-btn" title="Read Aloud" onclick="readAloud(this, '${langCode}')">
+                    <i data-lucide="volume-2"></i>
+                </button>
+                <button class="action-btn" title="Share Translation" onclick="shareText(this)">
+                    <i data-lucide="share"></i>
+                </button>
+            </div>
+        `;
+    }
+
     msgDiv.innerHTML = `
         <div class="message-content">
             <div class="message-avatar ${avatarClass}">
@@ -220,7 +237,8 @@ function appendMessage(role, text, langCode, cached = false, overrideSourceLang 
             </div>
             <div class="message-body ${role === 'error' ? 'error-msg' : ''}">
                 ${role !== 'error' ? `<div class="message-meta-lang">${langName}${cachedBadgeHTML}</div>` : ''}
-                <div>${text.replace(/\n/g, '<br/>')}</div>
+                <div class="message-text">${text.replace(/\n/g, '<br/>')}</div>
+                ${actionButtons}
             </div>
         </div>
     `;
@@ -337,3 +355,80 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
     chatInput.focus();
 });
+
+// --- UI Action Button Logic (Copy, Share, TTS) ---
+
+async function copyToClipboard(btn) {
+    try {
+        const textToCopy = btn.closest('.message-body').querySelector('.message-text').innerText;
+        await navigator.clipboard.writeText(textToCopy);
+        
+        // Visual feedback
+        btn.innerHTML = '<i data-lucide="check" style="color: var(--accent);"></i>';
+        lucide.createIcons({root: btn});
+        
+        setTimeout(() => {
+            btn.innerHTML = '<i data-lucide="copy"></i>';
+            lucide.createIcons({root: btn});
+        }, 2000);
+    } catch (e) {
+        console.error('Failed to copy', e);
+    }
+}
+
+function readAloud(btn, langCode) {
+    if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported by your browser.');
+        return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const textToRead = btn.closest('.message-body').querySelector('.message-text').innerText;
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    
+    // Map our BCP-47 specific codes to standard ISO codes native to Web Speech API
+    const ttsLangMap = {
+        'eng_Latn': 'en-US', 'en': 'en-US',
+        'hin_Deva': 'hi-IN', 'hi': 'hi-IN',
+        'tel_Telu': 'te-IN', 'te': 'te-IN',
+        'kor_Hang': 'ko-KR', 'ko': 'ko-KR',
+        'jpn_Jpan': 'ja-JP', 'ja': 'ja-JP',
+        'fra_Latn': 'fr-FR', 'fr': 'fr-FR',
+        'spa_Latn': 'es-ES', 'es': 'es-ES'
+    };
+    
+    // Attempt to set standard language or fallback to a default guess based on 2-letter prefix
+    utterance.lang = ttsLangMap[langCode] || langCode.substring(0, 2);
+
+    // Visual feedback
+    const svgIcon = btn.querySelector('svg');
+    if (svgIcon) svgIcon.style.color = 'var(--accent)';
+    
+    utterance.onend = () => {
+        if (svgIcon) svgIcon.style.color = '';
+    };
+    utterance.onerror = () => {
+        if (svgIcon) svgIcon.style.color = '';
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+async function shareText(btn) {
+    const textToShare = btn.closest('.message-body').querySelector('.message-text').innerText;
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Translingua Translation',
+                text: textToShare
+            });
+        } catch (e) {
+            console.error('Share failed', e);
+        }
+    } else {
+        copyToClipboard(btn);
+        alert('Text copied to clipboard! (Native Share not supported here).');
+    }
+}
