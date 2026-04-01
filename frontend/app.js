@@ -5,12 +5,7 @@ try {
     console.warn("Lucide icons failed to load:", e);
 }
 
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsModal = document.getElementById('settingsModal');
-const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-const globalTargetLang = document.getElementById('globalTargetLang');
-
+const targetLangSelect = document.getElementById('targetLangSelect');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 const uploadBtn = document.getElementById('uploadBtn');
@@ -25,6 +20,7 @@ const API_URL = 'http://localhost:8000';
 
 // Load settings
 let savedTargetLang = localStorage.getItem('translingua_target_lang') || 'en';
+targetLangSelect.value = savedTargetLang;
 
 const langNames = {
     'en': 'English', 'hi': 'Hindi', 'te': 'Telugu', 
@@ -38,16 +34,9 @@ function generateSessionId() {
     return 'session_' + Math.random().toString(36).substr(2, 9);
 }
 
-// Settings Modal Logic
-settingsBtn.addEventListener('click', () => {
-    globalTargetLang.value = savedTargetLang;
-    settingsModal.classList.remove('hidden');
-});
-closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-saveSettingsBtn.addEventListener('click', () => {
-    savedTargetLang = globalTargetLang.value;
+targetLangSelect.addEventListener('change', (e) => {
+    savedTargetLang = e.target.value;
     localStorage.setItem('translingua_target_lang', savedTargetLang);
-    settingsModal.classList.add('hidden');
 });
 
 // Auto-resize textarea
