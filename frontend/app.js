@@ -100,12 +100,9 @@ fileInput.addEventListener('change', async (e) => {
         const data = await response.json();
         removeMessage(typingElementId);
         
-        let previewText = data.translated_text;
-        if(previewText.length > 250) {
-            previewText = previewText.substring(0, 250) + '...';
-        }
-        
-        appendMessage('ai', `✅ Document translated successfully!\n\n**Preview:**\n${previewText}\n\n*A .txt file with the fully translated contents has been downloaded automatically.*`, targetLang);
+        // Display the FULL translated document directly in the chat!
+        let fullText = data.translated_text;
+        appendMessage('ai', `✅ Document translated successfully!\n\n${fullText}\n\n*A .txt file with the fully translated contents has been downloaded automatically.*`, targetLang);
         
         // Auto Download the translated file
         const blob = new Blob([data.translated_text], { type: 'text/plain;charset=utf-8' });
