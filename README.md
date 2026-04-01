@@ -25,8 +25,11 @@ We've recently upgraded the UI to feature a sleek, **ChatGPT-style conversationa
 
 - 🌍 **25+ Languages** - Including major global and Indian languages.
 - 🧠 **Completely Offline AI** - Runs locally on your machine using Meta's `nllb-200-distilled-600M` model. No API keys required!
-- 💬 **Conversational Interface** - Translates text seamlessly within an intuitive chat layout.
-- 🗂️ **Session History** - Automatically groups and caches your translations into click-to-resume sessions using SQLite.
+- 🕵️ **Auto-Detection** - Intelligently identifies source languages mathematically using `langdetect` before translating.
+- 📄 **Document Translation** - Seamlessly translates massive `.txt` and `.docx` files by utilizing built-in context chunking.
+- 🗣️ **Native Text-to-Speech** - Features built-in read-aloud support, one-click copy, and native browser share options.
+- 💬 **Conversational Interface** - Translates text seamlessly within an intuitive ChatGPT-style chat layout.
+- 🗂️ **Dynamic Session History** - Automatically groups your translations into click-to-resume sessions utilizing SQLite. Even rename and delete them!
 - ⚡ **Lightweight Frontend** - Built entirely with pure HTML, CSS, and JS (no build step necessary).
 
 ---
