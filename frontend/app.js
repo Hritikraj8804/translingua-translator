@@ -308,10 +308,18 @@ async function loadHistory() {
             const div = document.createElement('div');
             div.className = 'history-item';
             
+            const displayName = item.custom_name ? item.custom_name : item.input_text.substring(0, 30) + (item.input_text.length > 30 ? '...' : '');
+
             div.innerHTML = `
-                <div class="history-item-langs">${item.source_lang.toUpperCase()} &rarr; ${item.target_lang.toUpperCase()}</div>
-                <div class="history-item-text" title="${item.input_text.replace(/"/g, '&quot;')}">
-                    ${item.input_text}
+                <div class="history-item-content">
+                    <div class="history-item-langs">${item.source_lang.toUpperCase()} &rarr; ${item.target_lang.toUpperCase()}</div>
+                    <div class="history-item-text" title="${item.input_text.replace(/"/g, '&quot;')}">
+                        ${displayName}
+                    </div>
+                </div>
+                <div class="history-actions">
+                    <button class="icon-btn" onclick="event.stopPropagation(); renameSession('${item.session_id}', '${displayName.replace(/'/g, "\\'")}')" title="Rename"><i data-lucide="edit-2"></i></button>
+                    <button class="icon-btn" style="color: #ff6b6b;" onclick="event.stopPropagation(); deleteSession('${item.session_id}')" title="Delete"><i data-lucide="trash-2"></i></button>
                 </div>
             `;
             
@@ -321,6 +329,7 @@ async function loadHistory() {
             });
 
             sidebarHistoryList.appendChild(div);
+            lucide.createIcons({root: div});
         });
         
     } catch (e) {
@@ -347,6 +356,50 @@ async function loadSessionDetails(sessionId) {
         
     } catch (e) {
         console.error('Session Details Fetch Error:', e);
+    }
+}
+
+async function renameSession(sessionId, oldName) {
+    const newName = prompt('Enter a new name for this translation session:', oldName);
+    if (!newName || newName.trim() === '' || newName === oldName) return;
+
+    try {
+        const response = await fetch(`${API_URL}/session/${sessionId}/rename`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_name: newName.trim() })
+        });
+        
+        if (response.ok) {
+            loadHistory();
+        } else {
+            alert('Failed to rename session.');
+        }
+    } catch (e) {
+        console.error('Rename error:', e);
+        alert('Server unreachable.');
+    }
+}
+
+async function deleteSession(sessionId) {
+    if (!confirm('Are you sure you want to completely delete this chat history? This cannot be undone.')) return;
+
+    try {
+        const response = await fetch(`${API_URL}/session/${sessionId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            if (currentSessionId === sessionId) {
+                newChatBtn.click(); // Reset the main view if they deleted the active chat
+            }
+            loadHistory(); // Refresh sidebar list
+        } else {
+            alert('Failed to delete session.');
+        }
+    } catch (e) {
+        console.error('Delete error:', e);
+        alert('Server unreachable.');
     }
 }
 
