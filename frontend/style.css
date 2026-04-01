@@ -158,6 +158,30 @@ body {
 .sidebar-footer {
     padding: 15px;
     border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sidebar-settings-btn {
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+    width: 100%;
+}
+
+.sidebar-settings-btn:hover {
+    background: var(--bg-surface);
 }
 
 .user-profile {
@@ -515,6 +539,23 @@ body {
 }
 .close-btn:hover {
     color: var(--text-primary) !important;
+}
+
+/* Dropdown fixes for Modal */
+.modal-dropdown-select {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--bg-input, #1E1E1E);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    outline: none;
+    font-size: 0.95rem;
+}
+.modal-dropdown-select option {
+    background-color: #1e1e1e; /* Hardcode dark background */
+    color: #ffffff;            /* Hardcode white text */
+    padding: 8px;
 }
 
 .send-btn:disabled {
