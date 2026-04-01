@@ -386,9 +386,20 @@ function readAloud(btn, langCode) {
     window.speechSynthesis.cancel();
     
     const textToRead = btn.closest('.message-body').querySelector('.message-text').innerText;
-    const utterance = new SpeechSynthesisUtterance(textToRead);
     
-    // Map our BCP-47 specific codes to standard ISO codes native to Web Speech API
+    // Address Chrome TTS bug truncating long text -> split text into smaller chunks
+    let chunks = [];
+    const sentences = textToRead.match(/[^.!?\n]+[.!?\n]*/g) || [textToRead];
+    sentences.forEach(sentence => {
+        if (sentence.length > 200) {
+            const words = sentence.match(/.{1,200}(\s|$)/g);
+            if (words) chunks.push(...words);
+            else chunks.push(sentence);
+        } else {
+            if(sentence.trim()) chunks.push(sentence);
+        }
+    });
+
     const ttsLangMap = {
         'eng_Latn': 'en-US', 'en': 'en-US',
         'hin_Deva': 'hi-IN', 'hi': 'hi-IN',
@@ -399,21 +410,39 @@ function readAloud(btn, langCode) {
         'spa_Latn': 'es-ES', 'es': 'es-ES'
     };
     
-    // Attempt to set standard language or fallback to a default guess based on 2-letter prefix
-    utterance.lang = ttsLangMap[langCode] || langCode.substring(0, 2);
-
+    const standardLang = ttsLangMap[langCode] || langCode.substring(0, 2);
+    
     // Visual feedback
     const svgIcon = btn.querySelector('svg');
     if (svgIcon) svgIcon.style.color = 'var(--accent)';
     
-    utterance.onend = () => {
-        if (svgIcon) svgIcon.style.color = '';
-    };
-    utterance.onerror = () => {
-        if (svgIcon) svgIcon.style.color = '';
-    };
+    let currChunk = 0;
+    
+    function speakNextChunk() {
+        if (currChunk >= chunks.length) {
+            if (svgIcon) svgIcon.style.color = '';
+            return;
+        }
 
-    window.speechSynthesis.speak(utterance);
+        const utterance = new SpeechSynthesisUtterance(chunks[currChunk]);
+        utterance.lang = standardLang;
+        
+        utterance.onend = () => {
+            currChunk++;
+            speakNextChunk();
+        };
+        
+        utterance.onerror = (e) => {
+            console.error("TTS Error:", e);
+            if (svgIcon) svgIcon.style.color = '';
+            // Cancel sequence on error
+            window.speechSynthesis.cancel();
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    speakNextChunk();
 }
 
 async function shareText(btn) {
