@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from database import get_db, TranslationCache
+from database import get_db, TranslationCache, ChatSession
 import services
 import uvicorn
 import io
@@ -154,8 +154,9 @@ def get_history(db: Session = Depends(get_db), limit: int = 50):
 
 @app.get("/sessions")
 def get_sessions(db: Session = Depends(get_db)):
-    # Group locally, avoiding complex inner joins which might fail on some SQLite engine versions
     all_messages = db.query(TranslationCache).order_by(TranslationCache.created_at.desc()).all()
+    session_names = {s.session_id: s.custom_name for s in db.query(ChatSession).all()}
+    
     seen = set()
     unique_sessions = []
     for msg in all_messages:
@@ -168,9 +169,31 @@ def get_sessions(db: Session = Depends(get_db)):
                 "translated_text": msg.translated_text,
                 "source_lang": msg.source_lang,
                 "target_lang": msg.target_lang,
-                "created_at": msg.created_at.isoformat() if msg.created_at else None
+                "created_at": msg.created_at.isoformat() if msg.created_at else None,
+                "custom_name": session_names.get(msg.session_id)
             })
     return unique_sessions
+
+class RenameRequest(BaseModel):
+    new_name: str
+
+@app.put("/session/{session_id}/rename")
+def rename_session(session_id: str, req: RenameRequest, db: Session = Depends(get_db)):
+    session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+    if not session:
+        session = ChatSession(session_id=session_id, custom_name=req.new_name)
+        db.add(session)
+    else:
+        session.custom_name = req.new_name
+    db.commit()
+    return {"status": "success"}
+
+@app.delete("/session/{session_id}")
+def delete_session(session_id: str, db: Session = Depends(get_db)):
+    db.query(TranslationCache).filter(TranslationCache.session_id == session_id).delete()
+    db.query(ChatSession).filter(ChatSession.session_id == session_id).delete(synchronize_session=False)
+    db.commit()
+    return {"status": "success"}
 
 @app.get("/session/{session_id}")
 def get_session_details(session_id: str, db: Session = Depends(get_db)):

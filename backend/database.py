@@ -20,6 +20,13 @@ class TranslationCache(Base):
     translated_text = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    session_id = Column(String(50), primary_key=True, index=True)
+    custom_name = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 Base.metadata.create_all(bind=engine)
 
 def get_db():
