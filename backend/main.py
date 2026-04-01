@@ -36,10 +36,14 @@ def translate(request: TranslationRequest, db: Session = Depends(get_db)):
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
         
+    actual_source_lang = request.source_lang
+    if actual_source_lang == 'auto':
+        actual_source_lang = services.detect_language(request.text[:1000])
+        
     # Check Cache
     cached_trans = db.query(TranslationCache).filter(
         TranslationCache.input_text == request.text,
-        TranslationCache.source_lang == request.source_lang,
+        TranslationCache.source_lang == actual_source_lang,
         TranslationCache.target_lang == request.target_lang
     ).first()
     
@@ -47,7 +51,7 @@ def translate(request: TranslationRequest, db: Session = Depends(get_db)):
         return {
             "original_text": request.text,
             "translated_text": cached_trans.translated_text,
-            "source_lang": request.source_lang,
+            "source_lang": actual_source_lang,
             "target_lang": request.target_lang,
             "cached": True
         }
@@ -56,7 +60,7 @@ def translate(request: TranslationRequest, db: Session = Depends(get_db)):
     try:
         translated_text = services.translate_text(
             request.text, 
-            request.source_lang, 
+            actual_source_lang, 
             request.target_lang
         )
     except Exception as e:
@@ -67,7 +71,7 @@ def translate(request: TranslationRequest, db: Session = Depends(get_db)):
         session_id=request.session_id,
         input_text=request.text,
         translated_text=translated_text,
-        source_lang=request.source_lang,
+        source_lang=actual_source_lang,
         target_lang=request.target_lang
     )
     db.add(new_cache)
@@ -76,7 +80,7 @@ def translate(request: TranslationRequest, db: Session = Depends(get_db)):
     return {
         "original_text": request.text,
         "translated_text": translated_text,
-        "source_lang": request.source_lang,
+        "source_lang": actual_source_lang,
         "target_lang": request.target_lang,
         "cached": False
     }
@@ -105,6 +109,10 @@ async def translate_file(
     if not text_to_translate.strip():
         raise HTTPException(status_code=400, detail="File is empty or contains no readable text.")
         
+    actual_source_lang = source_lang
+    if actual_source_lang == "auto":
+        actual_source_lang = services.detect_language(text_to_translate[:1000])
+        
     # Translate (Chunked to respect NLLB 512 token limits)
     try:
         paragraphs = text_to_translate.split("\n")
@@ -112,7 +120,7 @@ async def translate_file(
         for p in paragraphs:
             if p.strip():
                 # Note: this translates line by line synchronously
-                res = services.translate_text(p.strip(), source_lang, target_lang)
+                res = services.translate_text(p.strip(), actual_source_lang, target_lang)
                 translated_paragraphs.append(res)
             else:
                 translated_paragraphs.append("")
@@ -127,7 +135,7 @@ async def translate_file(
         session_id=session_id,
         input_text=f"[📄 File Upload: {file.filename}]\n\n" + text_to_translate,
         translated_text=translated_text,
-        source_lang=source_lang,
+        source_lang=actual_source_lang,
         target_lang=target_lang
     )
     db.add(new_cache)
@@ -136,6 +144,7 @@ async def translate_file(
     return {
         "original_filename": file.filename,
         "translated_text": translated_text,
+        "source_lang": actual_source_lang
     }
 
 @app.get("/history")

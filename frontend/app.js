@@ -5,9 +5,12 @@ try {
     console.warn("Lucide icons failed to load:", e);
 }
 
-const sourceLangSelect = document.getElementById('sourceLang');
-const targetLangSelect = document.getElementById('targetLang');
-const swapBtn = document.getElementById('swapBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const globalTargetLang = document.getElementById('globalTargetLang');
+
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 const uploadBtn = document.getElementById('uploadBtn');
@@ -20,11 +23,32 @@ const newChatBtn = document.getElementById('newChatBtn');
 
 const API_URL = 'http://localhost:8000';
 
+// Load settings
+let savedTargetLang = localStorage.getItem('translingua_target_lang') || 'en';
+
+const langNames = {
+    'en': 'English', 'hi': 'Hindi', 'te': 'Telugu', 
+    'fr': 'French', 'es': 'Spanish', 'ja': 'Japanese',
+    'ko': 'Korean', 'de': 'German', 'auto': 'Auto-Detected'
+};
+
 let currentSessionId = generateSessionId();
 
 function generateSessionId() {
     return 'session_' + Math.random().toString(36).substr(2, 9);
 }
+
+// Settings Modal Logic
+settingsBtn.addEventListener('click', () => {
+    globalTargetLang.value = savedTargetLang;
+    settingsModal.classList.remove('hidden');
+});
+closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+saveSettingsBtn.addEventListener('click', () => {
+    savedTargetLang = globalTargetLang.value;
+    localStorage.setItem('translingua_target_lang', savedTargetLang);
+    settingsModal.classList.add('hidden');
+});
 
 // Auto-resize textarea
 chatInput.addEventListener('input', function() {
@@ -51,13 +75,6 @@ sendBtn.addEventListener('click', () => {
     sendTranslationRequest();
 });
 
-// Swap Languages
-swapBtn.addEventListener('click', () => {
-    const tempLang = sourceLangSelect.value;
-    sourceLangSelect.value = targetLangSelect.value;
-    targetLangSelect.value = tempLang;
-});
-
 // File Upload
 uploadBtn.addEventListener('click', () => {
     fileInput.click();
@@ -67,8 +84,8 @@ fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const sourceLang = sourceLangSelect.value;
-    const targetLang = targetLangSelect.value;
+    const sourceLang = "auto";
+    const targetLang = savedTargetLang;
 
     emptyState.classList.add('hidden');
     appendMessage('user', `📎 <strong>Attached Document:</strong> ${file.name}`, sourceLang);
@@ -140,8 +157,8 @@ async function sendTranslationRequest() {
     const text = chatInput.value.trim();
     if (!text) return;
 
-    const sourceLang = sourceLangSelect.value;
-    const targetLang = targetLangSelect.value;
+    const sourceLang = "auto";
+    const targetLang = savedTargetLang;
 
     // Remove empty state
     emptyState.classList.add('hidden');
@@ -178,7 +195,10 @@ async function sendTranslationRequest() {
         
         // Remove typing and replace with AI message
         removeMessage(typingElementId);
-        appendMessage('ai', data.translated_text, targetLang, data.cached);
+        
+        // If auto-detect worked, the backend should return the real detected source_lang safely
+        const displayLang = data.source_lang && data.source_lang !== 'auto' ? data.source_lang : 'auto';
+        appendMessage('ai', data.translated_text, targetLang, data.cached, displayLang);
         
         // Refresh history to show new item
         loadHistory();
@@ -190,7 +210,7 @@ async function sendTranslationRequest() {
     }
 }
 
-function appendMessage(role, text, langCode, cached = false) {
+function appendMessage(role, text, langCode, cached = false, overrideSourceLang = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${role === 'user' ? 'user-message' : role === 'ai' ? 'ai-message' : 'ai-message'}`;
     
@@ -198,11 +218,11 @@ function appendMessage(role, text, langCode, cached = false) {
     let avatarClass = role === 'user' ? 'user-avatar' : 'ai-avatar';
     
     // Format language name
-    let langName = "Language";
-    if(langCode) {
-        const select = role === 'user' ? sourceLangSelect : targetLangSelect;
-        const option = Array.from(select.options).find(opt => opt.value === langCode);
-        langName = option ? option.text : langCode.toUpperCase();
+    let langName = langCode ? (langNames[langCode] || langCode.toUpperCase()) : "Language";
+    
+    if (role === 'ai' && overrideSourceLang) {
+        let detName = langNames[overrideSourceLang] || overrideSourceLang.toUpperCase();
+        langName = `[Detected: ${detName}] &rarr; ${langName}`;
     }
     
     let cachedBadgeHTML = cached ? `<span style="background: rgba(46, 160, 67, 0.2); color: #2ea043; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; margin-left: 8px;">Cached⚡</span>` : '';
@@ -231,8 +251,7 @@ function appendTypingIndicator(targetLangCode) {
     msgDiv.className = `message ai-message`;
     msgDiv.id = id;
     
-    const option = Array.from(targetLangSelect.options).find(opt => opt.value === targetLangCode);
-    const langName = option ? option.text : targetLangCode.toUpperCase();
+    const langName = langNames[targetLangCode] || targetLangCode.toUpperCase();
 
     msgDiv.innerHTML = `
         <div class="message-content">
@@ -316,12 +335,6 @@ async function loadSessionDetails(sessionId) {
         
         chatBox.innerHTML = '';
         emptyState.classList.add('hidden');
-        
-        // Show first message's language as selected
-        if(messages.length > 0) {
-            sourceLangSelect.value = messages[0].source_lang;
-            targetLangSelect.value = messages[0].target_lang;
-        }
 
         messages.forEach(msg => {
             appendMessage('user', msg.input_text, msg.source_lang);

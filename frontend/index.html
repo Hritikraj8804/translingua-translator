@@ -37,28 +37,44 @@
 
         <!-- Main Chat Area -->
         <main class="main-content">
-            <!-- Top Navigation (Language Selection) -->
+            <!-- Top Navigation -->
             <header class="chat-header">
-                <div class="lang-selector-container">
-                    <select id="sourceLang" class="lang-select">
-                        <option value="en" selected>English</option>
-                        <option value="hi">Hindi</option>
-                        <option value="te">Telugu</option>
-                        <option value="ja">Japanese</option>
-                        <option value="ko">Korean</option>
-                    </select>
-                    <button id="swapBtn" class="swap-btn" title="Swap Languages">
-                        <i data-lucide="arrow-right-left"></i>
-                    </button>
-                    <select id="targetLang" class="lang-select">
-                        <option value="hi" selected>Hindi</option>
-                        <option value="en">English</option>
-                        <option value="te">Telugu</option>
-                        <option value="ja">Japanese</option>
-                        <option value="ko">Korean</option>
-                    </select>
+                <div class="header-title" style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:1.1rem; color: var(--text-primary);">
+                    <i data-lucide="bot"></i> TransLingua Matrix
                 </div>
+                <button id="settingsBtn" class="settings-btn" title="Translation Settings" style="background:transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <i data-lucide="settings"></i> Target Language
+                </button>
             </header>
+
+            <!-- Settings Modal -->
+            <div id="settingsModal" class="modal-overlay hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 style="margin:0; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i data-lucide="settings"></i> Target Language Settings</h3>
+                        <button id="closeSettingsBtn" class="close-btn" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="modal-body" style="padding: 20px;">
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">The Source Language will be <strong>100% auto-detected</strong>. Select the language you'd like to translate TO.</p>
+                        <div style="margin-bottom: 8px;">
+                            <label for="globalTargetLang" style="display:block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Always Translate To:</label>
+                            <select id="globalTargetLang" style="width: 100%; padding: 10px; background: var(--bg-dark); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; outline: none;">
+                                <option value="en">English</option>
+                                <option value="hi">Hindi</option>
+                                <option value="te">Telugu</option>
+                                <option value="fr">French</option>
+                                <option value="es">Spanish</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="de">German</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: right;">
+                        <button id="saveSettingsBtn" style="background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Save Changes</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Chat Messages Container -->
             <div id="chatBox" class="chat-box">
