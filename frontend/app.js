@@ -10,6 +10,8 @@ const targetLangSelect = document.getElementById('targetLang');
 const swapBtn = document.getElementById('swapBtn');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
+const uploadBtn = document.getElementById('uploadBtn');
+const fileInput = document.getElementById('fileInput');
 const chatBox = document.getElementById('chatBox');
 const emptyState = document.getElementById('emptyState');
 const sidebarHistoryList = document.getElementById('sidebarHistoryList');
@@ -54,6 +56,71 @@ swapBtn.addEventListener('click', () => {
     const tempLang = sourceLangSelect.value;
     sourceLangSelect.value = targetLangSelect.value;
     targetLangSelect.value = tempLang;
+});
+
+// File Upload
+uploadBtn.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const sourceLang = sourceLangSelect.value;
+    const targetLang = targetLangSelect.value;
+
+    emptyState.classList.add('hidden');
+    appendMessage('user', `📎 <strong>Attached Document:</strong> ${file.name}`, sourceLang);
+    const typingElementId = appendTypingIndicator(targetLang);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('source_lang', sourceLang);
+    formData.append('target_lang', targetLang);
+    formData.append('session_id', currentSessionId);
+
+    try {
+        const response = await fetch(`${API_URL}/translate-file`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'File translation failed');
+        }
+
+        const data = await response.json();
+        removeMessage(typingElementId);
+        
+        let previewText = data.translated_text;
+        if(previewText.length > 250) {
+            previewText = previewText.substring(0, 250) + '...';
+        }
+        
+        appendMessage('ai', `✅ Document translated successfully!\n\n**Preview:**\n${previewText}\n\n*A .txt file with the fully translated contents has been downloaded automatically.*`, targetLang);
+        
+        // Auto Download the translated file
+        const blob = new Blob([data.translated_text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Translated_${data.original_filename}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        loadHistory();
+        
+    } catch (error) {
+        console.error('File Upload Error:', error);
+        removeMessage(typingElementId);
+        appendMessage('error', `Error: ${error.message}. Large document translation might take time.`, '');
+    }
+    
+    fileInput.value = ''; // Reset
 });
 
 // New Chat Button

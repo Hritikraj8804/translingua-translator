@@ -74,7 +74,11 @@
             <!-- Bottom Input Area -->
             <div class="input-area-container">
                 <div class="input-box-wrapper">
-                    <textarea id="chatInput" placeholder="Enter text to translate..." rows="1"></textarea>
+                    <input type="file" id="fileInput" accept=".txt,.docx" style="display: none;" />
+                    <button id="uploadBtn" class="upload-btn" title="Upload Document">
+                        <i data-lucide="paperclip"></i>
+                    </button>
+                    <textarea id="chatInput" placeholder="Enter text or upload document..." rows="1"></textarea>
                     <button id="sendBtn" class="send-btn" disabled>
                         <i data-lucide="send"></i>
                     </button>

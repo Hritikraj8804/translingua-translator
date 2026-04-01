@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db, TranslationCache
 import services
 import uvicorn
+import io
+import docx
 
 app = FastAPI(title="Translingua AI", description="Offline-First Multilingual Translation System")
 
@@ -77,6 +79,63 @@ def translate(request: TranslationRequest, db: Session = Depends(get_db)):
         "source_lang": request.source_lang,
         "target_lang": request.target_lang,
         "cached": False
+    }
+
+@app.post("/translate-file")
+async def translate_file(
+    file: UploadFile = File(...),
+    source_lang: str = Form(...),
+    target_lang: str = Form(...),
+    session_id: str = Form("default_session"),
+    db: Session = Depends(get_db)
+):
+    content = await file.read()
+    filename = file.filename.lower()
+    
+    text_to_translate = ""
+    
+    if filename.endswith(".txt"):
+        text_to_translate = content.decode("utf-8", errors="replace")
+    elif filename.endswith(".docx"):
+        doc = docx.Document(io.BytesIO(content))
+        text_to_translate = "\n".join([p.text for p.text in doc.paragraphs if p.text.strip()])
+    else:
+        raise HTTPException(status_code=400, detail="Only .txt and .docx files are supported.")
+        
+    if not text_to_translate.strip():
+        raise HTTPException(status_code=400, detail="File is empty or contains no readable text.")
+        
+    # Translate (Chunked to respect NLLB 512 token limits)
+    try:
+        paragraphs = text_to_translate.split("\n")
+        translated_paragraphs = []
+        for p in paragraphs:
+            if p.strip():
+                # Note: this translates line by line synchronously
+                res = services.translate_text(p.strip(), source_lang, target_lang)
+                translated_paragraphs.append(res)
+            else:
+                translated_paragraphs.append("")
+                
+        translated_text = "\n".join(translated_paragraphs)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    # Save Upload summary to Cache
+    new_cache = TranslationCache(
+        session_id=session_id,
+        input_text=f"[📄 File Upload: {file.filename}]\n\n" + text_to_translate,
+        translated_text=translated_text,
+        source_lang=source_lang,
+        target_lang=target_lang
+    )
+    db.add(new_cache)
+    db.commit()
+    
+    return {
+        "original_filename": file.filename,
+        "translated_text": translated_text,
     }
 
 @app.get("/history")
